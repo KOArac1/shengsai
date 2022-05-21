@@ -5,6 +5,8 @@
     - 训练人脸模型
 - detector.py
     - 使用训练的模型来进行人脸识别
+- 更新! pDetector.py
+    - 尝试检测帕金森
 - haarcascade_frontalface_alt2.xml
     - OpenCV 中的人脸检测文件
 - data
@@ -222,3 +224,103 @@ cv2.destroyAllWindows()
 detector = cv2.face.LBPHFaceRecognizer_create()
 detector.read('./data/train.yml')
 ```
+---
+# pDetector.py
+### 老规矩，看源码：
+``` python
+import math
+import time
+
+import cv2
+from cvzone import HandTrackingModule
+
+cap = cv2.VideoCapture(0)
+detector = HandTrackingModule.HandDetector(detectionCon=0.75, maxHands=1)
+cTime = time.time()
+nowCenter = lastCenter = [0, 0]
+Lcj = cj = 0
+fps = 0
+lastLmList = LmList = []
+
+def Parkinson(image, lastLmList, lmList):
+    if not lastLmList == []:
+        length, info, img = detector.findDistance(lmList[8][0:2], lastLmList[8][0:2], img)
+        if length > 25:
+            cv2.putText(image, "Parkinson!", (lmList[8][0:2]), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 255), 2)
+        else:
+            cv2.putText(image, "Normal!", (lmList[8][0:2]), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 255), 2)
+        
+        pTime = time.time()
+        Rfps = 1 / (pTime - cTime)
+        cTime = pTime
+        
+        lastLmList = LmList
+
+        return image, Rfps
+
+
+while True:
+    flag, img = cap.read()
+    if not flag:
+        print("Read Error!")
+        break
+
+    hands, img = detector.findHands(img)
+    if len(hands) == 1:
+        hand = hands[0]
+        lmList = hand["lmList"]
+        center = hand["center"]
+        nowCenter = center[0 : 2]
+        if not lastCenter == [0, 0]:
+            cxj = abs(nowCenter[0] - lastCenter[0])
+            cyj = abs(nowCenter[1] - lastCenter[1])
+            cj = cxj ** 2 + cyj ** 2
+            cj = math.sqrt(cj)
+            if not Lcj == 0:
+                if abs(cj - Lcj) < 25:
+                    # img, fps = Parkinson(img, lastLmList, lmList)
+                    if not lastLmList == []:
+                        length, info, img = detector.findDistance(lmList[8][0:2], lastLmList[8][0:2], img)
+                        if length > 25:
+                            cv2.putText(img, "Parkinson!", (lmList[8][0:2]), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 255), 2)
+                        else:
+                            cv2.putText(img, "Normal!", (lmList[8][0:2]), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 255), 2)
+        
+                        pTime = time.time()
+                        fps = 1 / (pTime - cTime)
+                        cTime = pTime
+        
+                    lastLmList = LmList
+
+                Lcj = cj
+            else:
+                Lcj = cj
+
+            lastCenter = nowCenter
+        else:
+            lastCenter = nowCenter
+
+    if not fps == 0:
+        cv2.putText(img, str(fps), (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 255), 2)
+        
+    cv2.imshow("Parkinson", img)
+    if cv2.waitKey(1) == ord('q'):
+        break
+    
+cap.release()
+cv2.destroyAllWindows()
+```
+### 这个程序异常复杂。
+### 这里只做简单介绍 ~~（其实就是懒）~~。
+### 首先是这里：
+``` python
+cxj = abs(nowCenter[0] - lastCenter[0])
+cyj = abs(nowCenter[1] - lastCenter[1])
+cj = cxj ** 2 + cyj ** 2
+cj = math.sqrt(cj)
+```
+### 这里的 *cxj* 是上一帧食指与这一帧食指的坐标之间的 x 距离。
+### 同理， *cyj* 是上一帧食指与这一帧食指的坐标之间的 y 距离。
+### 然后就是勾股定理了， ~~两直角边的平方之和的算数平方根即为第三边~~。
+### **P.S：**
+### 原理是帕金森患者手抖，于是这个程序的原理是在手的中心点没有太大变化的前提下，若手指坐标大规模变化，即判定为帕金森。
