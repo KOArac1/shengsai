@@ -1,6 +1,5 @@
-from numpy import rint
 from xpinyin import Pinyin
-import speech_recognition as sr 
+import speech_recognition as sr
 
 p = Pinyin()
 r = sr.Recognizer()

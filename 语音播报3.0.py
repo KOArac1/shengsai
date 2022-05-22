@@ -1,9 +1,9 @@
+from comtypes.gen import SpeechLib
 from inspect import EndOfBlock
 from comtypes.client import CreateObject
 
 engine = CreateObject("sapi.spvoice")
 stream = CreateObject("sapi.spfilestream")
-from comtypes.gen import SpeechLib
 infile = 'F:\\shengsai\\test\\infile.txt'
 outfile = 'F:\\shengsai\\data\\outfile.wav'
 stream.Open(outfile, SpeechLib.SSFMCreateForWrite)

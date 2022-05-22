@@ -13,20 +13,24 @@ fps = 0
 lastLmList = LmList = []
 
 def Parkinson(image, lastLmList, lmList):
-    if not lastLmList == []:
-        length, info, img = detector.findDistance(lmList[8][0:2], lastLmList[8][0:2], img)
-        if length > 25:
-            cv2.putText(image, "Parkinson!", (lmList[8][0:2]), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 255), 2)
-        else:
-            cv2.putText(image, "Normal!", (lmList[8][0:2]), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 255), 2)
-        
-        pTime = time.time()
-        Rfps = 1 / (pTime - cTime)
-        cTime = pTime
-        
-        lastLmList = LmList
+    if lastLmList == []:
+        return
+    length, info, img = detector.findDistance(lmList[8][:2], lastLmList[8][:2], img)
 
-        return image, Rfps
+    if length > 25:
+        cv2.putText(image, "Parkinson!", lmList[8][:2], cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 255), 2)
+
+    else:
+        cv2.putText(image, "Normal!", lmList[8][:2], cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 255), 2)
+
+
+    pTime = time.time()
+    Rfps = 1 / (pTime - cTime)
+    cTime = pTime
+
+    lastLmList = LmList
+
+    return image, Rfps
 
 
 while True:
@@ -40,42 +44,38 @@ while True:
         hand = hands[0]
         lmList = hand["lmList"]
         center = hand["center"]
-        nowCenter = center[0 : 2]
-        if not lastCenter == [0, 0]:
+        nowCenter = center[:2]
+        if lastCenter != [0, 0]:
             cxj = abs(nowCenter[0] - lastCenter[0])
             cyj = abs(nowCenter[1] - lastCenter[1])
             cj = cxj ** 2 + cyj ** 2
             cj = math.sqrt(cj)
-            if not Lcj == 0:
-                if abs(cj - Lcj) < 25:
+            if Lcj != 0 and abs(cj - Lcj) < 25:
                     # img, fps = Parkinson(img, lastLmList, lmList)
-                    if not lastLmList == []:
-                        length, info, img = detector.findDistance(lmList[8][0:2], lastLmList[8][0:2], img)
-                        if length > 25:
-                            cv2.putText(img, "Parkinson!", (lmList[8][0:2]), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 255), 2)
-                        else:
-                            cv2.putText(img, "Normal!", (lmList[8][0:2]), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 255), 2)
-        
-                        pTime = time.time()
-                        fps = 1 / (pTime - cTime)
-                        cTime = pTime
-        
-                    lastLmList = LmList
+                if lastLmList != []:
+                    length, info, img = detector.findDistance(lmList[8][:2], lastLmList[8][:2], img)
 
-                Lcj = cj
-            else:
-                Lcj = cj
+                    if length > 25:
+                        cv2.putText(img, "Parkinson!", lmList[8][:2], cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 255), 2)
 
-            lastCenter = nowCenter
-        else:
-            lastCenter = nowCenter
+                    else:
+                        cv2.putText(img, "Normal!", lmList[8][:2], cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 255), 2)
 
-    if not fps == 0:
+
+                    pTime = time.time()
+                    fps = 1 / (pTime - cTime)
+                    cTime = pTime
+
+                lastLmList = LmList
+
+            Lcj = cj
+        lastCenter = nowCenter
+    if fps != 0:
         cv2.putText(img, str(fps), (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 255), 2)
-        
+
     cv2.imshow("Parkinson", img)
     if cv2.waitKey(1) == ord('q'):
         break
-    
+
 cap.release()
 cv2.destroyAllWindows()

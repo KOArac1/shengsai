@@ -1,25 +1,10 @@
 from win32com import client
-# import time
 
-filename = 'F:\\shengsai\\test\\test.txt'
-
+# Creating an instance of the SAPI.SpVoice COM object.
 engine = client.Dispatch('sapi.spvoice')
 
-file = open(filename, 'r', encoding='utf-8')
-result = file.read()
-print('Start!')
-
-# time.sleep(1)
-
-# print(result)
-
-# engine.Speak(result)
-
-while 1:
-    engine.Speak("Fuck you.")
-
-print("End!")
-
-file.close()
+# 说出括号内的文字。
+engine.Speak("语音播报,运行成功!")
 
 del engine
+# Deleting the COM object.

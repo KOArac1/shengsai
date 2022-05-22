@@ -11,7 +11,8 @@ while True:
         audio = recognizer.listen(source)
 
         try:
-            text = recognizer.recognize_sphinx(audio, language="zh-CN")  # 还可以选择不同的数据源，从而用来识别不同的语言
+            text = recognizer.recognize_sphinx(
+                audio, language="zh-CN")  # 还可以选择不同的数据源，从而用来识别不同的语言
             print("You said : ", text)
             engine.say(text)
             engine.runAndWait()
